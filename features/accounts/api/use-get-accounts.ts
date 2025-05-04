@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { clinet } from '@/lib/hono'
+import { client } from '@/lib/hono'
 
 export const useGetAccounts = () => {
   const query = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
-      const response = await clinet.api.accounts.$get()
+      const response = await client.api.accounts.$get()
 
       if (!response.ok) {
         throw new Error('Failed to fetch accounts')

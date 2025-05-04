@@ -14,6 +14,18 @@ const data: Payment = [
     amount: 100,
     status: 'pending',
     email: 'm@example.com'
+  },
+  {
+    id: '728ed52f',
+    amount: 100,
+    status: 'pending',
+    email: '123m@example.com'
+  },
+  {
+    id: '728ed52f',
+    amount: 100,
+    status: 'success',
+    email: 'm11@example.com'
   }
 ]
 

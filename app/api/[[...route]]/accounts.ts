@@ -15,6 +15,9 @@ const validateDeleteSchemaSchema = zValidator(
     ids: z.array(z.string())
   })
 )
+const validateEditAccountSchema = zValidator('param', z.object({ id: z.string().optional() }))
+const validatePatcSchema = zValidator('param', z.object({ id: z.string().optional() }))
+const validatePatcSchema2 = zValidator('json', insertAccountSchema.pick({ name: true }))
 
 const app = new Hono()
   .get('/', clerkMiddleware(), async c => {
@@ -39,6 +42,32 @@ const app = new Hono()
       })
       .from(accounts)
       .where(eq(accounts.userId, auth.userId))
+
+    return c.json({ data })
+  })
+  .get('/:id', validateEditAccountSchema, clerkMiddleware(), async c => {
+    const auth = getAuth(c)
+    const { id } = c.req.valid('param')
+
+    if (!id) {
+      return c.json({ error: 'Invalid id' }, 400)
+    }
+
+    if (!auth?.userId) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+
+    const [data] = await db
+      .select({
+        id: accounts.id,
+        name: accounts.name
+      })
+      .from(accounts)
+      .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
+
+    if (!data) {
+      return c.json({ error: 'Account not found' }, 404)
+    }
 
     return c.json({ data })
   })
@@ -76,6 +105,33 @@ const app = new Hono()
       .returning({
         id: accounts.id
       })
+
+    return c.json({ data })
+  })
+  .patch('/:id', clerkMiddleware(), validatePatcSchema, validatePatcSchema2, async c => {
+    const auth = getAuth(c)
+    const { id } = c.req.valid('param')
+    const values = c.req.valid('json')
+
+    console.log('==', id)
+
+    if (!id) {
+      return c.json({ error: 'Id is missed' }, 400)
+    }
+
+    if (!auth?.userId) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+
+    const [data] = await db
+      .update(accounts)
+      .set(values)
+      .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
+      .returning()
+
+    if (!data) {
+      return c.json({ error: 'Not found' }, 404)
+    }
 
     return c.json({ data })
   })

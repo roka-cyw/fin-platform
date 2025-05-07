@@ -1,11 +1,13 @@
 'use client'
 
-import { Edit, MoreHorizontal } from 'lucide-react'
+import { useState } from 'react'
+import { Edit, MoreHorizontal, Trash } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 import { useOpenAccount } from '@/features/accounts/hooks/use-open-account'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
+import { useConfirm } from '@/hook/use-confirm'
+import { useDeleteAccount } from '@/features/accounts/api/use-delete-account'
 
 type Props = {
   id: string
@@ -13,7 +15,14 @@ type Props = {
 
 export const Actions = ({ id }: Props) => {
   const { onOpen } = useOpenAccount()
+
   const [open, setOpen] = useState(false)
+  const [ConfirmDialog, confirm] = useConfirm(
+    'Are you sure ?',
+    'You are going to delete this transaction. This action cannot be undone.'
+  )
+
+  const deleteMutation = useDeleteAccount(id)
 
   // Added this handle to fix second click to the actoins.
   // Probably it doesnt work 2nd time bacause of diff between versions of packages
@@ -22,8 +31,21 @@ export const Actions = ({ id }: Props) => {
     setOpen(false)
   }
 
+  const handleDelete = async () => {
+    const ok = await confirm()
+
+    if (ok) {
+      deleteMutation.mutate(undefined, {
+        onSuccess: () => {
+          setOpen(false)
+        }
+      })
+    }
+  }
+
   return (
     <>
+      <ConfirmDialog />
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='size-8 p-0'>
@@ -31,9 +53,13 @@ export const Actions = ({ id }: Props) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end'>
-          <DropdownMenuItem disabled={false} onClick={handleEdit}>
+          <DropdownMenuItem disabled={deleteMutation.isPending} onClick={handleEdit}>
             <Edit className='size-4 mr-2' />
             Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={deleteMutation.isPending} onClick={handleDelete}>
+            <Trash className='size-4 mr-2' />
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

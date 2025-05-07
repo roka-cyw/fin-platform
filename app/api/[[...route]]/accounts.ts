@@ -18,6 +18,7 @@ const validateDeleteSchemaSchema = zValidator(
 const validateEditAccountSchema = zValidator('param', z.object({ id: z.string().optional() }))
 const validatePatcSchema = zValidator('param', z.object({ id: z.string().optional() }))
 const validatePatcSchema2 = zValidator('json', insertAccountSchema.pick({ name: true }))
+const validateDeleteSchema = zValidator('param', z.object({ id: z.string().optional() }))
 
 const app = new Hono()
   .get('/', clerkMiddleware(), async c => {
@@ -113,8 +114,6 @@ const app = new Hono()
     const { id } = c.req.valid('param')
     const values = c.req.valid('json')
 
-    console.log('==', id)
-
     if (!id) {
       return c.json({ error: 'Id is missed' }, 400)
     }
@@ -128,6 +127,29 @@ const app = new Hono()
       .set(values)
       .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
       .returning()
+
+    if (!data) {
+      return c.json({ error: 'Not found' }, 404)
+    }
+
+    return c.json({ data })
+  })
+  .delete('/:id', clerkMiddleware(), validateDeleteSchema, async c => {
+    const auth = getAuth(c)
+    const { id } = c.req.valid('param')
+
+    if (!id) {
+      return c.json({ error: 'Id is missed' }, 400)
+    }
+
+    if (!auth?.userId) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+
+    const [data] = await db
+      .delete(accounts)
+      .where(and(eq(accounts.userId, auth.userId), eq(accounts.id, id)))
+      .returning({ id: accounts.id })
 
     if (!data) {
       return c.json({ error: 'Not found' }, 404)

@@ -4,25 +4,25 @@ import { useState } from 'react'
 import { Edit, MoreHorizontal, Trash } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
-import { useOpenAccount } from '@/features/accounts/hooks/use-open-account'
+import { useOpenCategory } from '@/features/categories/hooks/use-open-category'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/hook/use-confirm'
-import { useDeleteAccount } from '@/features/accounts/api/use-delete-account'
+import { useDeleteCategory } from '@/features/categories/api/use-delete-category'
 
 type Props = {
   id: string
 }
 
 export const Actions = ({ id }: Props) => {
-  const { onOpen } = useOpenAccount()
+  const { onOpen } = useOpenCategory()
 
   const [open, setOpen] = useState(false)
   const [ConfirmDialog, confirm] = useConfirm(
     'Are you sure ?',
-    'You are going to delete this account. This action cannot be undone.'
+    'You are going to delete this category. This action cannot be undone.'
   )
 
-  const deleteMutation = useDeleteAccount(id)
+  const deleteMutation = useDeleteCategory(id)
 
   // Added this handle to fix second click to the actoins.
   // Probably it doesnt work 2nd time bacause of diff between versions of packages
